@@ -1,0 +1,1 @@
+{ "name": "aiui", "version": "0.0.1", "type": "module", "main": "src/index.js", "scripts": { "test": "node test/validate.test.js" } }
