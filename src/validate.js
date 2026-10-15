@@ -16,6 +16,7 @@ const FORBIDDEN = [
   [/\b(localStorage|sessionStorage|indexedDB|cookie)\b/, 'storage/cookie'],
   [/\bpostMessage\b/, 'postMessage'],
   [/\bWorker\b/, 'Worker'],
+  [/<\/script|<!--/i, 'cierre de script/comentario HTML'],
 ];
 
 export const MAX_CODE_LENGTH = 50_000;

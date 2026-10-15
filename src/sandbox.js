@@ -7,7 +7,7 @@ import { validateComponent } from './validate.js';
 const CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:";
 
 function buildSrcdoc(code, channel) {
-  const safeCode = JSON.stringify(code).replace(/</g, '\\u003c');
+  // Dos scripts inline (sin eval, que el CSP bloquea): primero el puente, luego el código del componente.
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${CSP}"></head><body><div id="root"></div>
 <script>
@@ -22,12 +22,22 @@ function buildSrcdoc(code, channel) {
     const p = pending.get(d.id); if (!p) return; pending.delete(d.id);
     d.error ? p.reject(new Error(d.error)) : p.resolve(d.value);
   });
+  window.addEventListener('error', (e) => send({ type: 'error', message: String(e.message) }));
   setInterval(() => send({ type: 'beat' }), 500);
-  const code = ${safeCode};
-  const AsyncFn = Object.getPrototypeOf(async function(){}).constructor;
-  new AsyncFn('root', 'api', code)(document.getElementById('root'), api)
-    .then(() => send({ type: 'ready' }), (err) => send({ type: 'error', message: String(err) }));
+  window.__aiui = {
+    root: document.getElementById('root'), api,
+    ready: () => send({ type: 'ready' }),
+    fail: (err) => send({ type: 'error', message: String(err) }),
+  };
 })();
+<\/script>
+<script>
+(function (b) {
+  delete window.__aiui;
+  (async function (root, api) {
+${code}
+  })(b.root, b.api).then(b.ready, b.fail);
+})(window.__aiui);
 <\/script></body></html>`;
 }
 
